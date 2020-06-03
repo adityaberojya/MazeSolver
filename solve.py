@@ -1,13 +1,12 @@
 from PIL import Image
 import time
 from mazes import Maze
-from factory import SolverFactory
 import bprofile
 
 # Read command line arguments - the python argparse class is convenient here.
 import argparse
 
-def solve(factory, method, input_file):
+def solve(method, input_file):
     # Load Image
     print ("Loading Image")
     im = Image.open(input_file)
@@ -22,7 +21,7 @@ def solve(factory, method, input_file):
     print ("Time elapsed:", total)
 
     # Create and run solver
-    [title, solver] = factory.createsolver(method)
+    [title, solver] = getSolver(method)
     print ("Starting Solve:", title, " on image ", input_file)
 
     t0 = time.time()
@@ -69,18 +68,35 @@ def solve(factory, method, input_file):
 
 profiler = bprofile.BProfile('profiler.png')
 
+def getSolver(method):
+    if method == "depthfirst":
+        import depthfirst
+        return ["Depth first search", depthfirst.solve]
+    elif method == "dijkstra":
+        import dijkstra
+        return ["Dijkstra's Algorithm", dijkstra.solve]
+    elif method == "astar":
+        import astar
+        return ["A-star Search", astar.solve]
+    else :
+        import breadthfirst
+        return ["Breadth first search", breadthfirst.solve]
+
+
 def main():
-    sf = SolverFactory()
+    Default = "breadthfirst"
+    Choices = ["breadthfirst","depthfirst","dijkstra", "astar"]
+    
     parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--method", nargs='?', const=sf.Default, default=sf.Default,
-                        choices=sf.Choices)
+    
+    parser.add_argument("-m", "--method", nargs='?', const=Default, default=Default, choices=Choices)
     parser.add_argument("input_file")
 
     args = parser.parse_args()
-    
+
     # The profiler generator a visual graph of the program during its execution.
     with profiler:
-        solve(sf, args.method, args.input_file)
+        solve(args.method, args.input_file)
 
 if __name__ == "__main__":
     main()
